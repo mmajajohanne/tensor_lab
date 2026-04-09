@@ -1,0 +1,4 @@
+NAK_dataset.txt
+__pycache__/
+*.pyc
+.DS_Store
