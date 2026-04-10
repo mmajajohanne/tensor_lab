@@ -1,15 +1,6 @@
 from helpers import get_norwegian_stopwords
 
 
-def load_dataset(dataset_path):
-    """Åpner tekstfilen og returnerer en liste med linjene i filen."""
-    with open(dataset_path, "r") as f:
-        dataset = []
-        for line in f:
-            dataset.append(line.strip())
-    return dataset
-
-
 def tokenize(text):
     """Splitter en tekst i ord ved å bruke mellomrom som separator."""
     return text.split()

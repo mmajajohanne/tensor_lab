@@ -1,18 +1,18 @@
-from vector_space.preprocessing import (
+from data.preprocessing import (
     load_dataset,
     tokenize_dataset,
     remove_stopwords,
     get_top_n_words,
     build_vocab,
 )
-from vector_space.vectorizer import build_cooccurrence_matrix
-from vector_space.similarity import cosine_similarity
-from vector_space.constants import WORDS, WORDS_SUBSET
+from models.vectorizer import build_cooccurrence_matrix
+from metrics.similarity import cosine_similarity
+from constants import WORDS, WORDS_SUBSET
 
 
 def main():
     # 1. Last inn og tokeniser datasettet
-    dataset = load_dataset("NAK_dataset.txt")
+    dataset = load_dataset("data/NAK_dataset.txt")
     tokenized_dataset = tokenize_dataset(dataset)
 
     all_tokens = [word for sentence in tokenized_dataset for word in sentence]
