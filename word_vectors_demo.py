@@ -1,5 +1,5 @@
+from data.loaders import load_dataset
 from data.preprocessing import (
-    load_dataset,
     tokenize_dataset,
     remove_stopwords,
     get_top_n_words,
@@ -11,7 +11,7 @@ from constants import WORDS, WORDS_SUBSET
 
 
 def main():
-    # 1. Last inn og tokeniser datasettet
+    # 1. last inn og tokeniser datasettet
     dataset = load_dataset("data/NAK_dataset.txt")
     tokenized_dataset = tokenize_dataset(dataset)
 
@@ -19,21 +19,21 @@ def main():
     print(f"Antall tokens: {len(all_tokens)}")
     print(f"Antall ordtyper: {len(set(all_tokens))}")
 
-    # 2. Fjern stoppord
+    # 2. fjern stoppord
     filtered_dataset = remove_stopwords(tokenized_dataset)
     filtered_tokens = [word for sentence in filtered_dataset for word in sentence]
     print(f"Antall tokens etter fjerning av stoppord: {len(filtered_tokens)}")
     print(f"Antall ordtyper etter fjerning av stoppord: {len(set(filtered_tokens))}")
 
-    # 3. Behold topp 10 000 ord og bygg vokabular
+    # 3. behold topp 10 000 ord og bygg vokabular
     top_words = get_top_n_words(filtered_dataset, n=10000)
     word_to_int, int_to_word = build_vocab(top_words)
 
-    # 4. Bygg sam-forekomstmatrisen
+    # 4. bygg sam-forekomstmatrisen
     matrix = build_cooccurrence_matrix(filtered_dataset, word_to_int)
     print(f"Dimensjonene til matrisen: {matrix.shape}")
 
-    # 5. Finn de 5 mest like ordene for hvert ord i WORDS_SUBSET
+    # 5. finn de 5 mest like ordene for hvert ord i WORDS_SUBSET
     for word in WORDS_SUBSET:
         if word not in word_to_int:
             print(f"'{word}' er ikke i vokabularet\n")
