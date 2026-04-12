@@ -87,3 +87,47 @@ I mine eksperimenter ga k=20 med TF-IDF best resultater på valideringssettet. I
 **Presisjon** - av alle dokumenter vi predikerte som klasse X, hvor mange var faktisk X?
 
 **Sensitivitet** - av alle dokumenter som faktisk er klasse X, hvor mange predikerte vi riktig?
+
+---
+
+## Regresjon og klassifikasjon
+
+### Lineær regresjon
+En modell som predikerer et reelt tall gitt en liste med inputtrekk. Modellen ganger hvert trekk med en vekt og legger til et konstantledd (bias):
+
+```
+y = vekt_1 * x_1 + vekt_2 * x_2 + ... + konstantledd
+```
+
+Jeg brukte dette på Auto MPG-datasettet for å predikere bensinforbruk (miles per gallon) basert på trekk som vekt, akselerasjon og hestekrefter. Implementert i `models/linear_regression.py`, trent med sklearn sin `LinearRegression`.
+
+### Gjennomsnittlig kvadratfeil (MSE)
+Tapsfunksjonen som brukes for lineær regresjon. Måler den gjennomsnittlige kvadratiske forskjellen mellom prediksjonene og de sanne verdiene:
+
+```
+MSE = (1/n) * sum((y - y_hat)^2)
+```
+
+En lavere MSE betyr bedre prediksjoner. Implementert i `metrics/losses.py`.
+
+### Trekk-seleksjon (feature selection)
+Hvilke trekk man bruker har mye å si for hvor bra modellen presterer. Jeg testet ulike kombinasjoner på Auto MPG og fant at å legge til `horsepower` og `model_year` halverte MSE sammenlignet med bare `weight` og `acceleration`. Å legge til enda flere trekk hjalp ikke alltid — noen trekk overlapper med hverandre og bidrar lite nytt.
+
+### Logistisk regresjon
+Brukes for klassifikasjon i stedet for regresjon. Fungerer på samme måte som lineær regresjon, men resultatet sendes gjennom en sigmoid-funksjon som gjør om tallet til en sannsynlighet mellom 0 og 1.
+
+Jeg brukte dette på Spambase-datasettet for å klassifisere e-poster som spam eller ikke. Implementert i `models/logistic_regression.py`, trent med sklearn sin `LogisticRegression`.
+
+### Sigmoid-funksjonen
+Gjør om et tall fra minus uendelig til pluss uendelig til et tall mellom 0 og 1:
+
+```
+sigmoid(x) = 1 / (1 + e^(-x))
+```
+
+Høye positive tall gir verdier nærme 1, høye negative tall gir verdier nærme 0.
+
+### Binær kryssentropi (BCE)
+Tapsfunksjonen som brukes for logistisk regresjon. Straffer modellen hardt når den er veldig sikker men tar feil, og lite når den er usikker. En lavere BCE betyr bedre prediksjoner. Implementert i `metrics/losses.py`.
+
+En ting jeg lærte her: `log(0)` er udefinert, så prediksjonene må klippes til et lite intervall bort fra 0 og 1 for å unngå numeriske feil.
