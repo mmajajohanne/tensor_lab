@@ -204,3 +204,55 @@ Etter 10 epoker med Sigmoid-aktivering og ett skjult lag med 64 nevroner:
 - Testnøyaktighet: **94,2 %**
 
 Train- og valideringstap følger hverandre tett gjennom alle epoker, noe som tyder på at modellen ikke overtilpasser. De vanligste feilene er ambiguøse siffer som ligner på hverandre — f.eks. 7 forvekslet med 9, eller 3 forvekslet med 8.
+
+---
+
+## Beslutningstrær og ensemble-metoder
+
+### Datasett: Titanic
+Titanic-datasettet inneholder informasjon om passasjerene på Titanic — kjønn, alder, billettklasse, pris og mer — samt om de overlevde eller ikke. Målet er å predikere overlevelse basert på disse trekkene.
+
+Kategoriske kolonner (`sex` og `embarked`) ble gjort om til tall. Manglende alderverdier ble fylt inn med medianalderen. Datasettet ble delt 80/20 i trenings- og testsett.
+
+### Beslutningstre
+Et beslutningstre deler opp dataene trinn for trinn ved å stille ja/nei-spørsmål om trekkene — f.eks. «er passasjeren kvinne?» eller «er billettklassen under 2,5?». Hvert spørsmål velges for å best mulig separere klassene, målt med gini-urenhet.
+
+Roten i treet brukte `sex` som første splitt, noe som gjenspeiler den historiske realiteten: kvinner hadde langt høyere overlevelsesrate enn menn.
+
+### Overtilpasning og regularisering
+Et ubegrenset tre ble dypt (dybde 20) og memorerte treningsdataene fullstendig — 98 % treningsnøyaktighet men bare 77 % på test. Dette er klassisk overtilpasning.
+
+Ved å begrense dybden (`max_depth`) tvinger vi treet til å generalisere. Jeg brukte kryssvalidering til å finne beste dybde:
+
+| Dybde | Kryssval.-nøy. |
+|-------|---------------|
+| 2     | 0.7963        |
+| 3     | 0.8216        |
+| **4** | **0.8230**    |
+| 5     | 0.8188        |
+| 6     | 0.8060        |
+
+Beste dybde var 4, med testnøyaktighet på 77 %.
+
+### Kryssvalidering
+I stedet for å dele dataene én gang deler vi dem flere ganger og roterer hvilken del som er testsett. Dette gir et mer pålitelig estimat av ytelsen, særlig på små datasett som Titanic.
+
+### Tilfeldig skog (random forest)
+En tilfeldig skog trener mange trær på tilfeldige underutvalg av dataene og lar dem stemme om svaret. Dette reduserer variansen og gir bedre generalisering enn ett enkelt tre.
+
+Med 20 trær og dybde 4 fikk skogen 81 % testnøyaktighet — en klar forbedring over enkelttreet. Å legge til enda flere trær hjalp ikke vesentlig utover det.
+
+### Sammenligning av modeller
+
+| Modell              | Testnøyaktighet |
+|---------------------|----------------|
+| Beslutningstre (d=4) | 77,1 %        |
+| k-NN (k=10)         | 71,0 %         |
+| MLP (50, 50)        | 78,8 %         |
+| Tilfeldig skog      | 81,0 %         |
+| Ensemble            | **81,6 %**     |
+
+k-NN gjorde det dårligst her — ren avstandsmåling i rå trekk fungerer ikke like godt på tabelldata som på tekst eller bilder. Ensemble-modellen kombinerte k-NN, MLP og tilfeldig skog og fikk best resultat samlet.
+
+### Ensemble og voting
+En `VotingClassifier` kombinerer flere ulike modeller ved at hver modell avgir en stemme og flertallet vinner. Fordelen er at ulike modeller gjør ulike feil — til sammen blir de mer robuste enn enkeltmodellene.
