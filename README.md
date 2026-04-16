@@ -131,3 +131,76 @@ Høye positive tall gir verdier nærme 1, høye negative tall gir verdier nærme
 Tapsfunksjonen som brukes for logistisk regresjon. Straffer modellen hardt når den er veldig sikker men tar feil, og lite når den er usikker. En lavere BCE betyr bedre prediksjoner. Implementert i `metrics/losses.py`.
 
 En ting jeg lærte her: `log(0)` er udefinert, så prediksjonene må klippes til et lite intervall bort fra 0 og 1 for å unngå numeriske feil.
+
+---
+
+## Nevrale nettverk
+
+### Datasett: MNIST
+MNIST er et klassisk datasett med 70 000 håndskrevne siffer (0–9) som 28x28 piksler i gråtoner. Hvert bilde flates ut til en vektor med 784 verdier. Jeg brukte 50 000 til trening, 10 000 til validering og 10 000 til test.
+
+Pikselveriene skaleres fra [0, 255] til [0, 1] før trening. Dette kalles normalisering og hjelper nettverket å lære raskere siden alle inputverdier er i samme størrelsesorden.
+
+### Arkitektur: fullt koblet nettverk (feed-forward)
+Et fullt koblet nettverk består av lag der hvert nevron i ett lag er koblet til alle nevroner i neste lag. Jeg brukte et nettverk med tre lag:
+
+```
+Input (784) -> Skjult lag (64) -> Output (10)
+```
+
+Totalt 50 890 parametere (vekter + bias). Implementert i `nn_utils.py`.
+
+### Aktiveringsfunksjoner
+Uten aktiveringsfunksjoner ville et flerlags nettverk bare være en lineær transformasjon — flere lag ville ikke hjelpe. Aktiveringsfunksjoner introduserer ikke-linearitet slik at nettverket kan lære mer komplekse mønstre.
+
+**Sigmoid** - samme funksjon som i logistisk regresjon, klemmer verdier til (0, 1):
+```
+sigmoid(x) = 1 / (1 + e^(-x))
+```
+
+**ReLU** (Rectified Linear Unit) — setter negative verdier til 0, beholder positive:
+```
+ReLU(x) = max(0, x)
+```
+
+Begge er implementert i `models/activations.py` med både forward-pass og derivert (trengs til tilbakepropagering).
+
+### Fremoverpropagering (forward pass)
+Data sendes lag for lag gjennom nettverket. For hvert lag regnes en vektet sum ut:
+
+```
+z = W * x + b
+```
+
+Deretter brukes aktiveringsfunksjonen på z. Det siste laget returnerer rå logit-verdier uten aktivering — disse brukes til å beregne tap og prediksjoner.
+
+### Softmax og multiklasse kryssentropi
+For å klassifisere i 10 klasser trengs sannsynligheter for hver klasse. Softmax gjør om logit-verdiene til en sannsynlighetsfordeling der alle verdier summerer til 1:
+
+```
+softmax(x_i) = e^(x_i) / sum(e^(x_j))
+```
+
+For numerisk stabilitet trekkes maksimumsverdien fra før eksponentiering. Tapsfunksjonen er multiklasse kryssentropi — den straffer modellen hardt når den tildeler lav sannsynlighet til riktig klasse. Implementert i `nn_utils.py`.
+
+### Tilbakepropagering (backpropagation)
+Algoritmen som beregner hvor mye hvert parameter bidro til feilen, ved å gå bakover gjennom nettverket med kjerneregelen. For hvert lag beregnes et delta som sier i hvilken retning vektene bør justeres for å redusere tapet.
+
+Outputlagets delta er enkelt: forskjellen mellom prediksjon og fasit (one-hot-kodet). For skjulte lag multipliseres neste lags delta med vektmatrisen og elementvis med den deriverte av aktiveringsfunksjonen.
+
+### Stokastisk gradientnedstigning med minibatcher (SGD)
+I stedet for å oppdatere vektene én gang per epoke (hele datasettet) eller én gang per eksempel, deles treningssettet opp i minibatcher. For hver minibatch beregnes gradient og vektene oppdateres:
+
+```
+W = W - (eta / n) * gradient
+```
+
+Jeg brukte minibatchstørrelse 64 og læringsrate 0,1. Minibatcher gir raskere og mer stabil trening enn å bruke hele datasettet om gangen.
+
+### Resultater
+Etter 10 epoker med Sigmoid-aktivering og ett skjult lag med 64 nevroner:
+- Treningsnøyaktighet: **94,3 %**
+- Valideringsnøyaktighet: **93,8 %**
+- Testnøyaktighet: **94,2 %**
+
+Train- og valideringstap følger hverandre tett gjennom alle epoker, noe som tyder på at modellen ikke overtilpasser. De vanligste feilene er ambiguøse siffer som ligner på hverandre — f.eks. 7 forvekslet med 9, eller 3 forvekslet med 8.
